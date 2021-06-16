@@ -3,7 +3,6 @@ import datetime
 import pytz
 import pyupbit
 import numpy as np
-# import matplotlib.pyplot as plt
 import pandas as pd
 import schedule
 
@@ -22,10 +21,10 @@ def get_tickers_global():
     tickers_KRW_global = pyupbit.get_tickers(fiat="KRW")
     exclusions = ['MARO', 'PCI','OBSR','SOLVE','QTCON', 'BTC', 'ETH', 
                   'KMD', 'ADX', 'LBC', 'IGNIS', 'DMT', 'EMC2', 'TSHP', 'LAMB', 'EDR', 'PXL'] # 거래 배제 종목
-    # print(exclusions)
+
     for exclusion in exclusions:
         exclusion_KRW = 'KRW-' + exclusion
-        # print(exclusion_KRW)
+
         tickers_KRW_global.remove(exclusion_KRW)
         
     return tickers_KRW_global
@@ -39,11 +38,9 @@ def get_df_dictionary():
         ticker = ticker_KRW[4:]
         df = pyupbit.get_ohlcv(ticker_KRW, interval=my_interval, count = 30, period=0.1)
         time.sleep(0.1)
-        df_dictionary[ticker] = df[:-1] # 지금 시간꺼 삭제    
+        df_dictionary[ticker] = df[:-1] #   
     # time.sleep(5)
     return df_dictionary
-
-# df_dictionary = get_df_dictionary()
 
 
 def get_ma_prev(df, ma, prev):
@@ -52,7 +49,7 @@ def get_ma_prev(df, ma, prev):
         df_ma = df[-ma-prev:]
     else:
         df_ma = df[-ma-prev:-prev]
-    # print(df_ma)
+
     return round( df_ma['close'].rolling(ma).mean().iloc[-1], 2)
 
 def get_balance(ticker):
@@ -88,22 +85,13 @@ def get_price(raw):
         
     return target_price
 
-
-# ticker = 'ADA'
-# df = df_dictionary[ticker]
-# a = get_ma_prev(df, 20, 0)
-# b = get_ma_prev(df, 20, 1)
-# c = get_ma_prev(df, 20, 2)
-# d = get_ma_prev(df, 20, 3)
-
 #%% 
 
 selling_point = 12 # %
 duration = 288
-buy_KRW = 100000
+buy_KRW = 500000
 
 upbit = pyupbit.Upbit(access, secret)
-# time.sleep(60*9)
 
 bool_list = [0,0,0,0,0,1]
 
@@ -183,33 +171,28 @@ while True:
                 dictionary[ticker][11] = 1
     
     
-    # 판매 성사되었는지 확인
+    # Sell check
     for ticker_KRW in tickers_KRW_global:
         ticker = ticker_KRW[4:]
     
-        # if dictionary[ticker][11] == 1:
         order = upbit.get_order(ticker_KRW)
-        if len(order) == 0: # 판매가 성사되었을 때
+        if len(order) == 0: # Sold out
             dictionary[ticker][7:12] = [0,0,0,0,0]
     
         else:
             now = datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))
-            # print(now)
+
             start_str = order[0]['created_at'][2:-6]
             start_time = datetime.datetime.strptime(start_str, '%y-%m-%dT%H:%M:%S').astimezone(pytz.timezone('Asia/Seoul'))
             end_time = start_time + datetime.timedelta(hours=duration*0.5)
             
-            if now > end_time: # 판매시간 지났 을 경우 나머지들 판매
+            if now > end_time: # Fail to sell during the duration
                 upbit.cancel_order(order[0]['uuid'])
                 print(f"Order for {ticker} deleted and sold")
                 time.sleep(2)
                 crypto = get_balance(ticker)
                 upbit.sell_market_order(ticker_KRW, crypto)
                 dictionary[ticker][7:12] = [0,0,0,0,0]
-
-
-#%%
-
 
 
 
