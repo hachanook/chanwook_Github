@@ -20,7 +20,7 @@ secret = "drOzjJbBm4WSRhhZ3JguEfaroiJRgsLLeAxAbSHL"
 def get_tickers_global():
     tickers_KRW_global = pyupbit.get_tickers(fiat="KRW")
     exclusions = ['MARO', 'PCI','OBSR','SOLVE','QTCON', 'BTC', 'ETH', 
-                  'KMD', 'ADX', 'LBC', 'IGNIS', 'DMT', 'EMC2', 'TSHP', 'LAMB', 'EDR', 'PXL'] # 거래 배제 종목
+                  'KMD', 'ADX', 'LBC', 'IGNIS', 'DMT', 'EMC2', 'TSHP', 'LAMB', 'EDR', 'PXL']
 
     for exclusion in exclusions:
         exclusion_KRW = 'KRW-' + exclusion
@@ -38,13 +38,11 @@ def get_df_dictionary():
         ticker = ticker_KRW[4:]
         df = pyupbit.get_ohlcv(ticker_KRW, interval=my_interval, count = 30, period=0.1)
         time.sleep(0.1)
-        df_dictionary[ticker] = df[:-1] #   
-    # time.sleep(5)
+        df_dictionary[ticker] = df[:-1]
     return df_dictionary
 
 
 def get_ma_prev(df, ma, prev):
-    """60분봉 ma 일 이동 평균선 조회"""
     if prev == 0:
         df_ma = df[-ma-prev:]
     else:
@@ -53,7 +51,6 @@ def get_ma_prev(df, ma, prev):
     return round( df_ma['close'].rolling(ma).mean().iloc[-1], 2)
 
 def get_balance(ticker):
-    """잔고 조회"""
     balances = upbit.get_balances()
     time.sleep(0.1)
     for b in balances:
@@ -64,7 +61,6 @@ def get_balance(ticker):
                 return 0
             
 def get_start_time(my_interval):
-    """시작 시간 조회"""
     df = pyupbit.get_ohlcv("KRW-ETH", interval=my_interval, count=1)
     start_time = df.index[0]
     return start_time
@@ -142,7 +138,7 @@ while True:
                 if krw > 1000000: 
                     # print(f'{ticker}: {dictionary[ticker][0]}')
                     order = upbit.get_order(ticker_KRW)
-                    if len(order) == 0: #or crypto < dictionary[ticker][0]: 
+                    if len(order) == 0: # or crypto < dictionary[ticker][0]: 
                         upbit.buy_market_order(ticker_KRW, buy_KRW)
                         
                         # update dictionary
